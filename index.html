@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Çok Tatlı Menü</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    },
+                    colors: { cream: '#FDFBF7', dark: '#1A1A1A', gold: '#D4AF37', softGray: '#F3F4F6' },
+                    animation: {
+                        'fade-up': 'fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        body { background-color: #FAFAFA; color: #1A1A1A; }
+        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .item-card:active { transform: scale(0.98); }
+        .item-image { box-shadow: 0 8px 20px -5px rgba(0,0,0,0.1); }
+        
+        /* Radio Button Styling */
+        .size-radio:checked + div {
+            background-color: #1A1A1A;
+            color: white;
+            border-color: #1A1A1A;
+        }
+        .size-radio:checked + div .check-icon { display: block; }
+    </style>
+</head>
+<body class="pb-10">
+
+    <header class="relative h-[30vh] w-full overflow-hidden bg-black">
+        <img src="https://i.imgur.com/lZrr6Nh.jpeg" class="w-full h-full object-cover opacity-70">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#FAFAFA] via-transparent to-black/40"></div>
+    </header>
+
+    <div class="sticky top-0 z-30 glass-nav py-4 pl-6 border-b border-gray-100">
+        <div class="flex gap-3 overflow-x-auto hide-scroll pr-6" id="category-nav"></div>
+    </div>
+
+    <div id="menu-content" class="px-5 py-8 space-y-10 max-w-2xl mx-auto"></div>
+
+    <div id="product-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md rounded-t-3xl h-[80vh] flex flex-col animate-slide-up shadow-2xl overflow-hidden relative">
+            
+            <div class="relative h-64 shrink-0">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent pointer-events-none"></div>
+                <button onclick="closeProductModal()" class="absolute top-4 right-4 bg-white/90 p-2 rounded-full shadow-lg text-black hover:bg-white transition z-20 cursor-pointer">
+                    <i data-feather="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-6 flex-1 overflow-y-auto pb-10">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-serif font-bold text-dark leading-tight" id="modal-title">Ürün Adı</h2>
+                    <p class="text-2xl font-bold text-gold mt-2" id="modal-display-price">0 ₺</p>
+                </div>
+
+                <div id="size-options-wrapper" class="hidden mb-8">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Porsiyon Seçenekleri</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="size" value="0" class="size-radio hidden" onchange="updatePrice(0)" checked>
+                            <div class="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-xl bg-gray-50 transition-all h-full">
+                                <span class="font-bold text-sm">Küçük Boy</span>
+                                <span class="text-xs opacity-70 mt-1">Standart</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="size" value="30" class="size-radio hidden" onchange="updatePrice(30)">
+                            <div class="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-xl bg-gray-50 transition-all h-full">
+                                <span class="font-bold text-sm">Büyük Boy</span>
+                                <span class="text-xs opacity-70 mt-1">+30 ₺</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="ingredients-wrapper" class="hidden mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">İçindekiler</h3>
+                    <div id="modal-ingredients" class="space-y-2"></div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center text-sm text-gray-500">
+                    Sipariş vermek için lütfen garsona bildiriniz.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        let currentItem = null;
+
+        // MENÜ VERİSİ
+        const MENU = {
+            "WAFFLE 🧇": [
+                {name: "Classic", price: 310, img: "https://i.imgur.com/Dr9pB48.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Beyaz Çikolata", "Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Milk", price: 310, img: "https://i.imgur.com/p62RsK8.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "White", price: 310, img: "https://i.imgur.com/51fJUkd.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Beyaz Çikolata","Çilek","Muz", "Fındık","Antep Fıstığı"]},
+                {name: "Black", price: 310, img: "https://i.imgur.com/I3MGqGp.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Bitter Çikolata","Çilek","Muz", "Fındık","Antep Fıstığı"]},
+                {name: "Gold", price: 320, img: "https://i.imgur.com/K0J8pSK.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Antep Fıstığı Sos","Sos","Karamel Sos","Muz","Çilek","Fındık","Antep Fıstığı"]},
+                {name: "Exotic", price: 315, img: "https://i.imgur.com/Nv6A7QR.png", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Bitter Çikolata","Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Special", price: 325, img: "https://i.imgur.com/Uj5Edx6.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata", "Muz", "Çilek","Orman Meyvesi", "Fındık","Antep Fıstığı"]},
+                {name: "Energy", price: 335, img: "https://i.imgur.com/R5jizQ8.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Bitter Çikolata", "Karamel Sos","Antep Fıstığı Sos","Orman Meyvesi","Muz","Çilek","Fındık","Antep Fıstığı"]},
+                {name: "Bomb", price: 400, img: "https://i.imgur.com/IWjv8Mu.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata","Çilek Sos","Karamel Sos","Muz","Çilek","Orman Meyvesi","Fındık","Antep Fıstığı"]},
+                {name: "Double", price: 550, img: "https://i.imgur.com/Aldx6Q8.png", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata", "Muz", "Çilek","Orman Meyvesi", "Fındık","Antep Fıstığı",]},
+                {name: "Triple", price: 320, img: "https://i.imgur.com/Uj5Edx6.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata", "Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Natural", price: 265, img: "https://i.imgur.com/mTH4wGu.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata","Fındık","Antep Fıstığı"]},
+                {name: "Dubai", price: 470, img: "https://i.imgur.com/1L7scXx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Antep Fıstığı Sosu","Fıstık Ezmesi","Kadayıf","Çilek","Muz","Antep Fıstığı"]},
+                {name: "Dubai Meyvesiz", price: 450, img: "https://i.imgur.com/1L7scXx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Antep Fıstığı Sosu","Fıstık Ezmesi","Kadayıf","Antep Fıstığı"]}
+            ],
+            "CUP WAFFLE 🧇": [
+                {name: "Cup Classic", price: 200, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Beyaz Çikolata", "Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Cup Milk", price: 200, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Cup White", price: 200, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Beyaz Çikolata","Çilek","Muz", "Fındık","Antep Fıstığı"]},
+                {name: "Cup Black", price: 200, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Bitter Çikolata","Çilek","Muz", "Fındık","Antep Fıstığı"]},
+                {name: "Cup Gold", price: 225, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Antep Fıstığı Sos","Sos","Karamel Sos","Muz","Çilek","Fındık","Antep Fıstığı"]},
+                {name: "Cup Exotic", price: 225, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği", "Sütlü Çikolata","Bitter Çikolata","Muz", "Çilek", "Fındık","Antep Fıstığı"]},
+                {name: "Cup Special", price: 230, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata", "Muz", "Çilek","Orman Meyvesi", "Fındık","Antep Fıstığı"]},
+                {name: "Cup Energy", price: 235, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Bitter Çikolata", "Karamel Sos","Antep Fıstığı Sos","Orman Meyvesi","Muz","Çilek","Fındık","Antep Fıstığı"]},
+                {name: "Cup Bomb", price: 245, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata","Çilek Sos","Karamel Sos","Muz","Çilek","Orman Meyvesi","Fındık","Antep Fıstığı"]},
+                {name: "Cup Triple", price: 230, img: "https://i.imgur.com/YEg4yjx.jpeg", ingredients: ["Özel Belçika Waffle Ekmeği","Sütlü Çikolata","Beyaz Çikolata","Bitter Çikolata", "Muz", "Çilek", "Fındık","Antep Fıstığı"]}
+            ],
+            "KUMPİR 🥔": [
+                {name: "Karışık Kumpir", price: 350, img: "https://i.imgur.com/YOgN4Dx.jpeg", ingredients: ["Patates", "Kaşar", "Tereyağı", "Mısır", "Kısır", "Amerikan Salatası","Sosis","Turşu","Yeşil Zeytin","Siyah Zeytin","Jalapeno Biberi"]}
+            ],
+            "SICAK ☕": [
+                {name: "Çay", price: 30, img: "https://i.imgur.com/ZiPJEh1.jpeg", ingredients: []},
+                {name: "Türk Kahvesi", price: 100, img: "https://i.imgur.com/gUVJoCc.jpeg", ingredients: []},
+                {name: "Americano", price: 135, img: "https://i.imgur.com/SbwLSqm.jpeg", ingredients: []},
+                {name: "Espresso", price: 80, img: "https://i.imgur.com/Zx9T9gI.jpeg", ingredients: []},
+                {name: "Filtre Kahve", price: 115, img: "https://i.imgur.com/Gv9I2Gl.jpeg", ingredients: []},
+                {name: "Latte", price: 145, img: "https://i.imgur.com/QBCGrsW.jpeg", ingredients: []},
+                {name: "Caramel Latte", price: 150, img: "https://i.imgur.com/5vvvRNI.jpeg", ingredients: []},
+                {name: "Caramel Machiato", price: 160, img: "https://i.imgur.com/hCfmMUp.jpeg", ingredients: []},
+                {name: "Sıcak Çikolata", price: 150, img: "https://i.imgur.com/mHU9oXW.png", ingredients: []}
+            ],
+            "SOĞUK 🍹": [
+                {name: "Ice Americano", price: 135, img: "https://i.imgur.com/sIXBOjY.jpeg", ingredients: []},
+                {name: "Ice Latte", price: 145, img: "https://i.imgur.com/Le0OvXz.jpeg", ingredients: []},
+                {name: "Ice Caramel Latte", price: 150, img: "https://i.imgur.com/fC5wS9g.jpeg", ingredients: []},
+                {name: "Ice Caramel Macchiato", price: 160, img: "https://i.imgur.com/7wzZfzU.jpeg", ingredients: []},
+                {name: "Su", price: 20, img: "https://i.imgur.com/1XTXIOC.jpeg", ingredients: []},
+                {name: "Soda", price: 40, img: "https://i.imgur.com/v9oJsTq.jpeg", ingredients: []},
+                {name: "Limonata", price: 115, img: "https://i.imgur.com/XQwE3Tv.png", ingredients: []},
+                {name: "Coca Cola", price: 65, img: "https://i.imgur.com/N7aOsGv.png", ingredients: []},
+                {name: "Ice Tea Limon", price: 65, img: "https://i.imgur.com/1monx0d.png", ingredients: []},
+                {name: "Ice Tea Mango", price: 65, img: "https://i.imgur.com/OjxD3R4.jpeg", ingredients: []},
+                {name: "Ice Tea Şeftali", price: 65, img: "https://i.imgur.com/1zGVRUO.png", ingredients: []}
+            ]
+        };
+
+        function renderMenu() {
+            const nav = document.getElementById('category-nav');
+            const content = document.getElementById('menu-content');
+            let idx = 0;
+            nav.innerHTML = ''; content.innerHTML = '';
+
+            for (const [cat, items] of Object.entries(MENU)) {
+                const catId = `cat-${idx}`;
+                
+                nav.innerHTML += `<button onclick="scrollToCat('${catId}')" id="btn-${catId}" class="px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap bg-white border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition-all">${cat}</button>`;
+                
+                const isDrinkCategory = cat.includes("SICAK") || cat.includes("SOĞUK");
+                const inspectBadgeHtml = isDrinkCategory ? '' : '<div class="text-xs text-gray-400 font-medium border border-gray-200 rounded-lg px-2 py-1">İncele</div>';
+
+                let itemsHtml = '';
+                items.forEach((item, i) => {
+                    const delay = i * 50;
+                    const itemData = encodeURIComponent(JSON.stringify(item));
+                    itemsHtml += `
+                        <div onclick="openProductModal('${itemData}', '${cat}')" class="item-card flex gap-5 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 animate-fade-up cursor-pointer transition-transform" style="animation-delay: ${delay}ms">
+                            <img src="${item.img}" class="w-24 h-24 rounded-xl object-cover bg-gray-100 flex-shrink-0 item-image" onerror="this.src='https://placehold.co/100x100?text=Urun'">
+                            <div class="flex flex-col justify-between flex-1 py-1">
+                                <div>
+                                    <h3 class="font-serif text-lg font-bold leading-tight text-dark">${item.name}</h3>
+                                    <p class="text-xs text-gray-400 mt-1 line-clamp-1">${item.ingredients ? item.ingredients.join(', ') : ''}</p>
+                                </div>
+                                <div class="flex justify-between items-end mt-2">
+                                    <span class="font-sans font-bold text-lg text-dark">${item.price} ₺</span>
+                                    ${inspectBadgeHtml}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                
+                content.innerHTML += `<div id="${catId}" class="scroll-mt-32 mb-10"><h2 class="font-serif text-3xl font-bold text-dark mb-6 pl-2 border-l-4 border-black">${cat.split(' ')[0]}</h2><div class="grid gap-4 md:grid-cols-2">${itemsHtml}</div></div>`;
+                idx++;
+            }
+            feather.replace();
+        }
+
+        function openProductModal(itemData, categoryName) {
+            const item = JSON.parse(decodeURIComponent(itemData));
+            currentItem = item;
+            
+            document.getElementById('modal-img').src = item.img;
+            document.getElementById('modal-title').innerText = item.name;
+            document.getElementById('modal-display-price').innerText = item.price + " ₺";
+            
+            const sizeWrapper = document.getElementById('size-options-wrapper');
+            const radios = document.getElementsByName('size');
+            radios[0].checked = true;
+            updatePrice(0); 
+
+            if (categoryName.includes('WAFFLE') && !categoryName.includes('CUP')) {
+                sizeWrapper.classList.remove('hidden');
+            } else {
+                sizeWrapper.classList.add('hidden');
+            }
+
+            const ingContainer = document.getElementById('modal-ingredients');
+            const ingWrapper = document.getElementById('ingredients-wrapper');
+            ingContainer.innerHTML = '';
+            
+            if (item.ingredients && item.ingredients.length > 0) {
+                ingWrapper.classList.remove('hidden');
+                item.ingredients.forEach(ing => {
+                    ingContainer.innerHTML += `
+                        <div class="flex items-center p-3 rounded-xl border border-gray-100 bg-gray-50">
+                            <div class="w-2 h-2 rounded-full bg-gold mr-3"></div>
+                            <span class="font-medium text-sm text-gray-700">${ing}</span>
+                        </div>`;
+                });
+            } else {
+                ingWrapper.classList.add('hidden');
+            }
+            
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function updatePrice(extraPrice) {
+            const finalPrice = currentItem.price + parseInt(extraPrice);
+            document.getElementById('modal-display-price').innerText = finalPrice + " ₺";
+        }
+
+        function closeProductModal() { 
+            document.getElementById('product-modal').classList.add('hidden'); 
+        }
+
+        window.scrollToCat = (id) => { 
+            const el = document.getElementById(id); 
+            if(el) { 
+                document.querySelectorAll('#category-nav button').forEach(b => { 
+                    b.classList.remove('bg-black', 'text-white', 'border-black'); 
+                    b.classList.add('bg-white', 'text-gray-500', 'border-gray-200'); 
+                }); 
+                const btn = document.getElementById(`btn-${id}`); 
+                btn.classList.remove('bg-white', 'text-gray-500', 'border-gray-200'); 
+                btn.classList.add('bg-black', 'text-white', 'border-black'); 
+                const y = el.getBoundingClientRect().top + window.pageYOffset - 120; 
+                window.scrollTo({top: y, behavior: 'smooth'}); 
+            } 
+        };
+
+        renderMenu();
+        setTimeout(() => { if(document.querySelector('#category-nav button')) document.querySelector('#category-nav button').click(); }, 100);
+    </script>
+</body>
+</html>
